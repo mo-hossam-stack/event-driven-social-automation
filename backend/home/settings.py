@@ -133,6 +133,7 @@ AUTHENTICATION_BACKENDS = [
     # `allauth` specific authentication methods, such as login by email
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
+SOCIALACCOUNT_STORE_TOKENS = True
 
 #    SOCIALACCOUNT_PROVIDERS = {
 #     "openid_connect": {
