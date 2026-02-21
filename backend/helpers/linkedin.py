@@ -3,6 +3,8 @@ import requests
 
 
 User = get_user_model()
+def UserNotConnectedLinkedIn(Exception):
+    pass
 
 def get_linkedin_user_details(user):
     try:
