@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     #openid -> linkedin
     'allauth.socialaccount.providers.openid_connect',
+    #internal
+    'posts'
 ]
 
 MIDDLEWARE = [
