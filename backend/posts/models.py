@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-
+from django.core.exceptions import ValidationError
 User = settings.AUTH_USER_MODEL
 
 
@@ -17,6 +17,26 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def clean(self, *args, **kwargs):
+        super().clean(*args, **kwargs)
+        if self.share_now is None and self.share_at is None:
+            raise ValidationError(
+                {
+                    "share_at": "You must select a time to share or share it now",
+                    "share_now": "You must select a time to share or share it now"
+                }
+            )
+        if self.share_on_linkedin:
+            self.verify_can_share_on_linkedin()
+        # run the save method (pre & post save)
+
+    def get_scheduled_platforms(self):
+        platforms = []
+        if self.share_on_linkedin:
+            platforms.append("linkedin")
+        return platforms
+
+
     def save(self, *args, **kwargs):
         # pre-save
         do_schedule_post = False
@@ -29,4 +49,31 @@ class Post(models.Model):
         if self.share_now:
             self.share_at = timezone.now()
         super().save(*args, **kwargs)
+
+        if do_schedule_post:
+            time_delay = (timezone.now() + timedelta(seconds=10)).timestamp() * 1000
+            if self.share_at:
+                time_delay = (self.share_at +  + timedelta(seconds=45)).timestamp() * 1000
         # post-save
+    
+    def verify_can_share_on_linkedin(self):
+        # run validation errors if attempting to share on linkedin
+        if len(self.content) < 5:
+            raise ValidationError({
+                "content": "Content must be at least 5 characters long."
+            })
+        if self.shared_at_linkedin:
+            raise ValidationError({
+                "share_on_linkedin": f"Content is already shared on LinkedIn at {self.shared_at_linkedin}.",
+                "content": "Content is already shared on LinkedIn."
+            })
+        try:
+            linkedin.get_linkedin_user_details(self.user)
+        except linkedin.UserNotConnectedLinkedIn:
+            raise ValidationError({
+                "user": f"You must connect LinkedIn before sharing to LinkedIn."
+            })
+        except Exception as e:
+            raise ValidationError({
+                "user": f"{e}"
+            })
