@@ -24,7 +24,7 @@ def get_share_headers(linkedin_social):
     }
 
 
-def share_to_linkedin(user: User, text:str):
+def share_to_linkedin(user, text:str):
     if not user.socialaccount_set.filter(provider="linkedin").exists():
         raise ValueError("User is not linked to LinkedIn")
     linkedin_social = user.socialaccount_set.get(provider="linkedin")
