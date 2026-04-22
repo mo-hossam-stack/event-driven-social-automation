@@ -7,4 +7,5 @@ requires-python = ">=3.12"
 dependencies = [
     "django>=6.0.2",
     "django-allauth[socialaccount]>=65.14.1",
+    "inngest>=0.5.18",
 ]
