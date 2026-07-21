@@ -11,19 +11,23 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from dotenv import load_dotenv
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load .env from backend/ directory
+load_dotenv(BASE_DIR / '.env')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-uw6)mj+892+$^v#t@gq@vy^k6z=&h^bj-blmwrlu@anln!))6k'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-uw6)mj+892+$^v#t@gq@vy^k6z=&h^bj-blmwrlu@anln!))6k')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 if DEBUG:
     ALLOWED_HOSTS = ["*"]
@@ -140,19 +144,19 @@ AUTHENTICATION_BACKENDS = [
 ]
 SOCIALACCOUNT_STORE_TOKENS = True
 
-#    SOCIALACCOUNT_PROVIDERS = {
-#     "openid_connect": {
-#         "APPS": [
-#             {
-#                 "provider_id": "linkedin",
-#                 "name": "LinkedIn",
-#                 "client_id": "<insert-id>",
-#                 "secret": "<insert-secret>",
-#                 "settings": {
-#                     "scope": ["openid", "profile", "w_member_social", "email"],
-#                     "server_url": "https://www.linkedin.com/oauth",
-#                 },
-#             }
-#         ]
-#     }
-# }
+SOCIALACCOUNT_PROVIDERS = {
+    "openid_connect": {
+        "APPS": [
+            {
+                "provider_id": "linkedin",
+                "name": "LinkedIn",
+                "client_id": os.environ.get("LINKEDIN_CLIENT_ID", ""),
+                "secret": os.environ.get("LINKEDIN_CLIENT_SECRET", ""),
+                "settings": {
+                    "scope": ["openid", "profile", "w_member_social", "email"],
+                    "server_url": "https://www.linkedin.com/oauth",
+                },
+            }
+        ]
+    }
+}
