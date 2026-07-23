@@ -1,8 +1,10 @@
 import logging
+
 import inngest
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.utils import timezone
 
 from helpers import linkedin
@@ -30,7 +32,7 @@ class Post(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"Post #{self.pk} by {self.user_id}"
+        return f"Post {self.pk}"
 
     def clean(self, *args, **kwargs):
         super().clean(*args, **kwargs)
@@ -39,6 +41,13 @@ class Post(models.Model):
                 {
                     "share_at": "You must select a time to share or share it now.",
                     "share_now": "You must select a time to share or share it now.",
+                }
+            )
+        if self.share_now is True and self.share_at is not None:
+            raise ValidationError(
+                {
+                    "share_at": "Cannot set both 'share now' and a scheduled time.",
+                    "share_now": "Cannot set both 'share now' and a scheduled time.",
                 }
             )
         if self.share_on_linkedin:
@@ -72,15 +81,13 @@ class Post(models.Model):
                 self.user_id,
                 self.share_at,
             )
-            inngest_client.send_sync(
-                inngest.Event(
-                    name="posts/post.scheduled",
-                    id=f"posts/post.scheduled.{self.id}",
-                    data={"post_id": self.id},
-                )
+            event = inngest.Event(
+                name="posts/post.scheduled",
+                id=f"posts/post.scheduled.{self.id}",
+                data={"post_id": self.id},
             )
+            transaction.on_commit(lambda: inngest_client.send_sync(event))
 
-    
     def verify_can_share_on_linkedin(self):
         # run validation errors if attempting to share on linkedin
         if len(self.content) < 5:
