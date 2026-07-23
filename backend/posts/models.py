@@ -1,32 +1,44 @@
+import logging
+import inngest
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from datetime import timedelta
-from helpers import linkedin
-User = settings.AUTH_USER_MODEL
 
+from helpers import linkedin
+from scheduler.client import inngest_client
+
+logger = logging.getLogger(__name__)
+
+User = settings.AUTH_USER_MODEL
 
 
 class Post(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     share_now = models.BooleanField(default=None, null=True, blank=True)
-    share_at = models.DateTimeField(auto_now=False, auto_now_add=False, null=True, blank=True)
-    share_start_at = models.DateTimeField(auto_now=False, auto_now_add=False, null=True, blank=True)
-    share_complete_at = models.DateTimeField(auto_now=False, auto_now_add=False, null=True, blank=True)
+    share_at = models.DateTimeField(null=True, blank=True)
+    share_start_at = models.DateTimeField(null=True, blank=True)
+    share_complete_at = models.DateTimeField(null=True, blank=True)
     share_on_linkedin = models.BooleanField(default=False)
-    shared_at_linkedin = models.DateTimeField(auto_now=False, auto_now_add=False, null=True, blank=True)
+    shared_at_linkedin = models.DateTimeField(null=True, blank=True)
+    linkedin_post_urn = models.CharField(max_length=255, blank=True, default="")
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Post #{self.pk} by {self.user_id}"
 
     def clean(self, *args, **kwargs):
         super().clean(*args, **kwargs)
         if self.share_now is None and self.share_at is None:
             raise ValidationError(
                 {
-                    "share_at": "You must select a time to share or share it now",
-                    "share_now": "You must select a time to share or share it now"
+                    "share_at": "You must select a time to share or share it now.",
+                    "share_now": "You must select a time to share or share it now.",
                 }
             )
         if self.share_on_linkedin:
@@ -41,23 +53,33 @@ class Post(models.Model):
 
 
     def save(self, *args, **kwargs):
-        # pre-save
-        do_schedule_post = False
-        if all([
-            self.share_now is not None or self.share_at is not None,
-            self.share_complete_at is None and self.share_start_at is None
-        ]):
-            do_schedule_post = True
+        creating = self.pk is None
+
+        should_schedule = (
+            creating
+            and self.share_on_linkedin
+            and (self.share_now is True or self.share_at is not None)
+        )
 
         if self.share_now:
             self.share_at = timezone.now()
         super().save(*args, **kwargs)
 
-        if do_schedule_post:
-            time_delay = (timezone.now() + timedelta(seconds=10)).timestamp() * 1000
-            if self.share_at:
-                time_delay = (self.share_at +  + timedelta(seconds=45)).timestamp() * 1000
-        # post-save
+        if should_schedule:
+            logger.info(
+                "Scheduling post %s for user %s (share_at=%s)",
+                self.id,
+                self.user_id,
+                self.share_at,
+            )
+            inngest_client.send_sync(
+                inngest.Event(
+                    name="posts/post.scheduled",
+                    id=f"posts/post.scheduled.{self.id}",
+                    data={"post_id": self.id},
+                )
+            )
+
     
     def verify_can_share_on_linkedin(self):
         # run validation errors if attempting to share on linkedin
