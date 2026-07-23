@@ -1,22 +1,26 @@
 from django.contrib.auth import get_user_model
+import logging
 import requests
 
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 def UserNotConnectedLinkedIn(Exception):
     pass
 
+class LinkedInShareError(Exception):
+    pass
 def get_linkedin_user_details(user):
     try:
         linkedin_social = user.socialaccount_set.get(provider="linkedin")
-    except:
+    except user.socialaccount_set.model.DoesNotExist:
         raise UserNotConnectedLinkedIn("LinkedIn is not connected on this user.")
     return linkedin_social
 
 def get_share_headers(linkedin_social):
     tokens = linkedin_social.socialtoken_set.all()
     if not tokens.exists():
-        raise Exception("LinkedIn  connection is invalid. Please login again.")
+        raise LinkedInShareError("LinkedIn connection is invalid. Please login again.")
     social_token = tokens.first()
     return {
         "Authorization": f"Bearer {social_token.token}",
@@ -24,15 +28,16 @@ def get_share_headers(linkedin_social):
     }
 
 
-def share_to_linkedin(user, text:str):
+def share_to_linkedin(user, text: str) -> str:
     if not user.socialaccount_set.filter(provider="linkedin").exists():
-        raise ValueError("User is not linked to LinkedIn")
+        raise UserNotConnectedLinkedIn("User is not linked to LinkedIn")
+
     linkedin_social = user.socialaccount_set.get(provider="linkedin")
     linkedin_user_id = linkedin_social.uid
 
     
     if not linkedin_user_id:
-        raise Exception("Invalid LinkedIn User Id")
+        raise LinkedInShareError("Invalid LinkedIn User ID")
     headers = get_share_headers(linkedin_social)
     endpoint = "https://api.linkedin.com/v2/ugcPosts"
     payload = {
@@ -40,19 +45,21 @@ def share_to_linkedin(user, text:str):
         "lifecycleState": "PUBLISHED",
         "specificContent": {
             "com.linkedin.ugc.ShareContent": {
-                "shareCommentary": {
-                    "text": f"{text}"
-                },
-                "shareMediaCategory": "NONE"
+                "shareCommentary": {"text": text},
+                "shareMediaCategory": "NONE",
             }
         },
         "visibility": {
             "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
-        }
+        },
     }
+
     response = requests.post(endpoint, json=payload, headers=headers)
-    try:
-        response.raise_for_status()
-    except:
-        raise Exception("Invalid post, please try again later")
-    return response
+    response.raise_for_status()
+
+    post_urn = response.headers.get("x-restli-id", "")
+    if not post_urn:
+        raise LinkedInShareError("LinkedIn returned no post URN")
+
+    logger.info("LinkedIn post created (urn=%s)", post_urn)
+    return post_urn
