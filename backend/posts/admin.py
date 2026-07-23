@@ -1,39 +1,45 @@
 from django.contrib import admin
+
 from .models import Post
+
+
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('user', 'content', 'updated_at')
+    list_display = ("content", "user", "share_on_linkedin", "updated_at")
 
     def get_list_display(self, request, *args, **kwargs):
         if request.user.is_superuser:
-            return ['content', 'user',  'updated_at']
-        return ['content', 'updated_at']
+            return [
+                "content",
+                "user",
+                "share_on_linkedin",
+                "shared_at_linkedin",
+                "linkedin_post_urn",
+                "updated_at",
+            ]
+        return ["content", "share_on_linkedin", "updated_at"]
 
     def get_queryset(self, request):
-        user = request.user
         qs = super().get_queryset(request)
         if request.user.is_superuser:
             return qs
         return qs.filter(user=request.user)
 
-    def hh(self, request, obj=None, *args, **kwargs):
-        if request.user.is_superuser:
-            return True
-        if obj is None:
-            return False
-        return obj.user == request.user and not obj.shared_at_linkedin
-    
-
     def get_readonly_fields(self, request, obj, *args, **kwargs):
         if obj and obj.shared_at_linkedin:
-            return ["user", "content", "shared_at_linkedin", "share_on_linkedin"]
+            return [
+                "user",
+                "content",
+                "share_on_linkedin",
+                "shared_at_linkedin",
+                "linkedin_post_urn",
+            ]
         if request.user.is_superuser:
-            return ["shared_at_linkedin",]
-        return ["user", "shared_at_linkedin",]
+            return ["shared_at_linkedin", "linkedin_post_urn"]
+        return ["user", "shared_at_linkedin", "linkedin_post_urn"]
 
     def save_model(self, request, obj, form, change):
-        if not change: # the obj no change, aka being created
-            if not obj.user:
-                obj.user = request.user
+        if not change and not obj.user:
+            obj.user = request.user
         super().save_model(request, obj, form, change)
 
 admin.site.register(Post, PostAdmin)
