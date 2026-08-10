@@ -1,5 +1,16 @@
 # Event-Driven Social Automation
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Django-6.0-092E20?style=for-the-badge&logo=django&logoColor=white" alt="Django 6.0" />
+  <img src="https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12+" />
+  <img src="https://img.shields.io/badge/Inngest-Event--Driven-32A7C2?style=for-the-badge" alt="Inngest" />
+  <img src="https://img.shields.io/badge/django--allauth-LinkedIn--OAuth-CC6699?style=for-the-badge" alt="django-allauth LinkedIn OAuth" />
+  <img src="https://img.shields.io/badge/SQLite-3-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite" />
+  <img src="https://img.shields.io/badge/Docker-Scheduler-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/uv-Package--Manager-2F3134?style=for-the-badge&logo=uv&logoColor=white" alt="uv" />
+  <img src="https://img.shields.io/badge/rav-Task--Runner-404040?style=for-the-badge" alt="rav" />
+</p>
+
 A Django-based LinkedIn post scheduler using **Inngest** for event-driven scheduling. Create posts (via admin or web UI) and the system auto-publishes them to LinkedIn at a scheduled time.
 
 ## Prerequisites
