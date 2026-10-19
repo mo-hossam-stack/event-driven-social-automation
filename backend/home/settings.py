@@ -132,6 +132,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 
 # All auth setup 
@@ -143,6 +145,10 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 SOCIALACCOUNT_STORE_TOKENS = True
+
+LOGIN_URL = "account_login"
+LOGIN_REDIRECT_URL = "posts:dashboard"
+ACCOUNT_LOGOUT_REDIRECT_URL = "account_login"
 
 SOCIALACCOUNT_PROVIDERS = {
     "openid_connect": {
