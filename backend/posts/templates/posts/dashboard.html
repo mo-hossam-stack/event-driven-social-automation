@@ -1,0 +1,47 @@
+{% extends "posts/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+  <h1>Your Posts</h1>
+
+  {% if posts %}
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Content</th>
+            <th scope="col">Status</th>
+            <th scope="col">Scheduled</th>
+            <th scope="col">Published</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for post in posts %}
+            <tr>
+              <td>{{ post.content|truncatechars:60 }}</td>
+              <td>
+                {% if post.shared_at_linkedin %}
+                  <span class="badge">Published</span>
+                {% elif post.share_at %}
+                  <span class="badge">Scheduled</span>
+                {% else %}
+                  <span class="badge">Draft</span>
+                {% endif %}
+              </td>
+              <td>{{ post.share_at|default:"—" }}</td>
+              <td>{{ post.shared_at_linkedin|default:"—" }}</td>
+              <td><a href="{% url 'posts:detail' post.pk %}">View</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="card empty">
+      <p>You haven't created any posts yet.</p>
+      <a class="btn" href="{% url 'posts:create' %}">Create your first post</a>
+    </div>
+  {% endif %}
+{% endblock %}
