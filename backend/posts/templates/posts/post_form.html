@@ -1,0 +1,61 @@
+{% extends "posts/base.html" %}
+
+{% block title %}Create Post{% endblock %}
+
+{% block content %}
+  <h1>Create Post</h1>
+
+  <div class="card">
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <ul class="errorlist">
+          {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <div class="field">
+        <label for="{{ form.content.id_for_label }}">{{ form.content.label }}</label>
+        {{ form.content }}
+        {% if form.content.help_text %}<span class="helptext">{{ form.content.help_text }}</span>{% endif %}
+        {{ form.content.errors }}
+      </div>
+
+      <div class="field checkbox">
+        {{ form.share_on_linkedin }}
+        <label for="{{ form.share_on_linkedin.id_for_label }}">{{ form.share_on_linkedin.label }}</label>
+      </div>
+      {{ form.share_on_linkedin.errors }}
+
+      <div class="field checkbox">
+        {{ form.share_now }}
+        <label for="{{ form.share_now.id_for_label }}">{{ form.share_now.label }}</label>
+      </div>
+      {{ form.share_now.errors }}
+
+      <div class="field" id="share-at-row">
+        <label for="{{ form.share_at.id_for_label }}">{{ form.share_at.label }}</label>
+        {{ form.share_at }}
+        {% if form.share_at.help_text %}<span class="helptext">{{ form.share_at.help_text }}</span>{% endif %}
+        {{ form.share_at.errors }}
+      </div>
+
+      <button class="btn" type="submit">Create Post</button>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      var shareNow = document.getElementById("{{ form.share_now.id_for_label }}");
+      var row = document.getElementById("share-at-row");
+      function sync() {
+        row.hidden = shareNow.checked;
+      }
+      shareNow.addEventListener("change", sync);
+      sync();
+    });
+  </script>
+{% endblock %}
