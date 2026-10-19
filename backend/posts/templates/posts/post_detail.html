@@ -1,0 +1,44 @@
+{% extends "posts/base.html" %}
+
+{% block title %}Post {{ post.pk }}{% endblock %}
+
+{% block content %}
+  <h1>Post {{ post.pk }}</h1>
+
+  <div class="card">
+    <div class="content-block">{{ post.content }}</div>
+
+    <p>
+      {% if post.shared_at_linkedin %}
+        Shared at {{ post.shared_at_linkedin }}{% if post.linkedin_post_urn %} — {{ post.linkedin_post_urn }}{% endif %}
+      {% else %}
+        Not yet shared
+      {% endif %}
+    </p>
+
+    <dl>
+      <dt>Share on LinkedIn</dt>
+      <dd>{{ post.share_on_linkedin }}</dd>
+      <dt>Share now</dt>
+      <dd>{{ post.share_now }}</dd>
+      <dt>Share at</dt>
+      <dd>{{ post.share_at|default:"—" }}</dd>
+      <dt>Share started at</dt>
+      <dd>{{ post.share_start_at|default:"—" }}</dd>
+      <dt>Share completed at</dt>
+      <dd>{{ post.share_complete_at|default:"—" }}</dd>
+      <dt>Shared at LinkedIn</dt>
+      <dd>{{ post.shared_at_linkedin|default:"—" }}</dd>
+      <dt>LinkedIn post URN</dt>
+      <dd>{{ post.linkedin_post_urn|default:"—" }}</dd>
+      <dt>Created at</dt>
+      <dd>{{ post.created_at }}</dd>
+      <dt>Updated at</dt>
+      <dd>{{ post.updated_at }}</dd>
+    </dl>
+  </div>
+
+  <p style="margin-top: 1.25rem;">
+    <a href="{% url 'posts:dashboard' %}">Back to dashboard</a>
+  </p>
+{% endblock %}
