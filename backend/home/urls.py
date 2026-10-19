@@ -20,6 +20,6 @@ from scheduler.views import scheduler_inngest_view_path
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
-
+    path('', include('posts.urls')),
 ]
 urlpatterns += [scheduler_inngest_view_path]
