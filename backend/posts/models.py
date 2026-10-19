@@ -36,7 +36,7 @@ class Post(models.Model):
 
     def clean(self, *args, **kwargs):
         super().clean(*args, **kwargs)
-        if self.share_now is None and self.share_at is None:
+        if not self.share_now and self.share_at is None:
             raise ValidationError(
                 {
                     "share_at": "You must select a time to share or share it now.",
